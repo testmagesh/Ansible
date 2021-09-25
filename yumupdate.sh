@@ -1,2 +1,2 @@
-su - root
+sudo su jenkins
 yum update -y
