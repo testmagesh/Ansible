@@ -1,8 +1,9 @@
 ---
 
 - hosts: all
+  ignore_errors: yes
   tasks:
   - name: Creating an empty file
     file:
-      path: "/root/file2.txt"
+      path: "/root/file3.txt"
       state: touch
