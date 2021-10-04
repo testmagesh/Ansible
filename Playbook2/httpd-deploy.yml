@@ -1,0 +1,35 @@
+---
+
+- hosts: all
+  ignore_errors: yes
+  tasks:
+  - name: Install httpd package
+    yum:
+      name: 
+        - httpd
+        - firewalld
+      state: present
+  - name: start service httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+  - name: start service firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+  - name: Add http service in firewall rule
+    firewalld:
+      service: http
+      state: enabled
+      permanent: true
+      immediate: yes
+  - name: Creating an empty file
+    file:
+      path: "/var/www/html/index.html"
+      state: touch
+  - name: copy the contents to txt file
+    copy:
+      content: "Welcome to Magesh Ansible Lab\n"
+      dest: /var/www/html/index.html
