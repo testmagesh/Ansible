@@ -5,5 +5,9 @@
   tasks:
   - name: Creating an empty file
     file:
-      path: "/root/file3.txt"
+      path: "/root/welcome.txt"
       state: touch
+  - name: copy the contents to txt file
+    copy:
+      content: "Development\n"
+      dest: /root/welcome.txt 
