@@ -1,0 +1,9 @@
+---
+  - name: hwreport
+    hosts: all
+    ignore_errors: yes
+    tasks:
+  - name: create a file
+    file:
+      path: /root/hw.txt
+      state: touch
