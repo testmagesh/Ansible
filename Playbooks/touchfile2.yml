@@ -1,0 +1,30 @@
+---
+
+- hosts: all
+  ignore_errors: yes
+  tasks:
+  - name: Creating an empty file
+    file:
+      path: "/root/file3.txt"
+      state: touch
+  - name: collect report 1
+    set_fact:
+      HOSTNAME: "{{ ansible_hostname }}"
+      MEMORY: "{{ ansible_memtotal_mb  }}"
+      BIOS: "{{ ansible_bios_version }}"
+      CPU: "{{ ansible_processor }}"
+      DISK_SIZE_VDA: "{{ ansible_devices['vda']['size'] }}"
+  - name: collect report 2
+    set_fact:
+      DISK_SIZE_VDB: "{{ ansible_devices['vdb']['size'] }}"
+  - name: copy the values
+    copy:
+      content:  |
+        #hwreport
+        HOSTNAME={{ HOSTNAME | default('NONE') }}
+        MEMORY={{ MEMORY | default('NONE') }}
+        BIOS={{ BIOS  | default('NONE') }}
+        CPU={{ CPU | default('NONE') }}
+        DISK_SIZE_VDA={{ DISK_SIZE_VDA | default('NONE') }}
+        DISK_SIZE_VDB={{ DISK_SIZE_VDB | default('NONE') }}
+      dest: /root/file3.txt
