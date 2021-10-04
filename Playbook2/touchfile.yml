@@ -1,9 +1,9 @@
 ---
-  - name: hwreport
-    hosts: all
-    ignore_errors: yes
-    tasks:
-  - name: create a file
+
+- hosts: all
+  ignore_errors: yes
+  tasks:
+  - name: Creating an empty file
     file:
-      path: /root/hw.txt
+      path: "/root/file3.txt"
       state: touch
