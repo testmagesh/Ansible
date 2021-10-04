@@ -1,0 +1,1 @@
+sudo -u jenkins -H sh -c "sudo yum update -y"
