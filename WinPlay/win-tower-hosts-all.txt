@@ -1,0 +1,26 @@
+---
+- name: 7zip
+  hosts: all
+  gather_facts: true
+  tasks:
+   - win_package:
+       path: C:\temp\7z1900-x64.exe
+       product_id: 7-Zip
+       arguments: /S
+       state: present
+---
+- name: Add a user
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Add User
+      win_user:
+        name: monday
+        password: "redhat"
+        state: present
+- name: Ping
+  hosts: all
+
+  tasks:
+  - name: ping
+    win_ping:
