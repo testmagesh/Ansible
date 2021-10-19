@@ -1,0 +1,10 @@
+---
+- name: Install IIS
+  hosts: win
+  gather_facts: true
+  tasks:
+   - win_package:
+       path: C:\temp\7z1900-x64.exe
+       product_id: 7-Zip
+       arguments: /S
+       state: present
