@@ -1,0 +1,17 @@
+- name: 'create directory and cp files'
+  hosts: client1
+  become: true
+  tasks:
+     - name: create directory
+       file:
+         path: /var/tmp/rpmdb7
+         state: directory
+     - name: cpfiles
+       shell:
+         cmd: tar -cvzf /var/tmp/rpmdb7/rpmdb.tar.gz /var/lib/rpm
+     - name: rebuild
+       shell:
+         cmd: rpm -vv --rebuilddb > /tmp/rpmrebuilddb.log 2>&1
+     - name: verify
+       shell:
+         cmd: /usr/lib/rpm/rpmdb_verify /var/lib/rpm/Packages
