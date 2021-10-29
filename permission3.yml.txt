@@ -1,0 +1,13 @@
+permission2.yml    permission3.retry  permission3.yml    permission.retry   permission.yml
+[root@anserver ansible]# cat permission3.yml
+- name: 'Change file permission'
+  hosts: client1
+  become: true
+  tasks:
+    - name: check file permission
+      shell: ls -ld /var/tmp/rpmdb.tar.gz | awk '{print $1}'
+      register: lsouttarfile
+    - debug: var=lsouttarfile
+    - name: Sert file permission
+      file: path=/var/tmp/rpmdb.tar.gz mode=0600 state=file
+      when: lsouttarfile.stdout_lines == [ "-rw-r--r--." ] and ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
