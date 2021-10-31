@@ -1,0 +1,19 @@
+- name: 'Add Line in file'
+  hosts: client1
+  become: true
+  ignore_errors: yes
+  vars:
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
+  tasks:
+    - name: Copy file
+      copy:
+        src: /etc/yum.conf
+        dest: /etc/yum.conf_{{ time }}
+    - name: Add Line in file
+      lineinfile:
+        path: /etc/yum.conf
+        line: 'localpkg_gpgcheck=1'
+        insertafter: 'gpgcheck=1'
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "7" or ansible_distribution_major_version == "6"
