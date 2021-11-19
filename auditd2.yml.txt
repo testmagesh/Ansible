@@ -1,0 +1,456 @@
+[root@anserver ansible]# cat auditd2.yml
+- name: 'Change file permission'
+  hosts: client1
+  become: true
+  ignore_errors: yes
+  tasks:
+    - name: check file service
+      shell: systemctl status auditd | grep Active | awk '{ print $2 }'
+      register: auditdstatus
+    - debug: var=auditdstatus
+    - name: Kill auditd failed pid
+      shell: for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do kill -9 $i; done
+      when: auditdstatus.stdout_lines == [ "active" ] and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+    - name: Start auditd service
+      service:
+        name: auditd
+        state: started
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+[root@anserver ansible]# 
+
++++++++++++++
+
+ps -ef | grep 1559 | grep auditd | awk '{ print $8 }'
+
+[root@anclient2 ~]# systemctl status auditd | grep Active | awk '{ print $2}'; auditctl -s | grep -i pid
+active
+pid 1559
+
+for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do ps -ef |grep $i|grep auditd|awk '{ print $8 }'; done
+
+- name: 'Change file permission'
+  hosts: client1
+  become: true
+  ignore_errors: yes
+  tasks:
+    - name: check file service
+      shell: systemctl status auditd | grep Active | awk '{ print $2 }'
+      register: auditdstatus
+    - debug: var=auditdstatus
+    - name: check file service
+      shell: for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do ps -ef |grep $i|grep auditd|awk '{ print $8 }'; done
+      register: taniumpid
+    - debug: var=taniumpid
+    - name: Kill auditd failed pid
+      shell: for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do kill -9 $i; done
+      when: 
+        - auditdstatus.stdout_lines == [ "active" ] and taniumpid.stdout_lines == [ "/sbin/auditd" ]
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_major_version == "7" or ansible_distribution_major_version == "6"
+    - name: Start auditd service
+      service:
+        name: auditd
+        state: started
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+
++++++++++++++
+
+[root@anserver ansible]# vi auditd3.yml
+[root@anserver ansible]# ansible-playbook --syntax auditd3.yml
+
+playbook: auditd3.yml
+[root@anserver ansible]# ansible-playbook auditd3.yml -vvv
+ansible-playbook 2.4.2.0
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = [u'/root/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/site-packages/ansible
+  executable location = /usr/bin/ansible-playbook
+  python version = 2.7.5 (default, Nov 16 2020, 22:23:17) [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
+Using /etc/ansible/ansible.cfg as config file
+Parsed /etc/ansible/hosts inventory source with ini plugin
+
+PLAYBOOK: auditd3.yml ************************************************************************************************************
+1 plays in auditd3.yml
+
+PLAY [Change file permission] ****************************************************************************************************
+
+TASK [Gathering Facts] ***********************************************************************************************************
+Using module file /usr/lib/python2.7/site-packages/ansible/modules/system/setup.py
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'echo ~ && sleep 0'"'"''
+<anclient2.magesh.com> (0, '/root\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'( umask 77 && mkdir -p "` echo /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049 `" && echo ansible-tmp-1635942893.96-202658826972049="` echo /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049 `" ) && sleep 0'"'"''
+<anclient2.magesh.com> (0, 'ansible-tmp-1635942893.96-202658826972049=/root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049\n', '')
+<anclient2.magesh.com> PUT /tmp/tmpbMdlUt TO /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/setup.py
+<anclient2.magesh.com> SSH: EXEC sftp -b - -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 '[anclient2.magesh.com]'
+<anclient2.magesh.com> (0, 'sftp> put /tmp/tmpbMdlUt /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/setup.py\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'chmod u+x /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/ /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/setup.py && sleep 0'"'"''
+<anclient2.magesh.com> (0, '', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 -tt anclient2.magesh.com '/bin/sh -c '"'"'sudo -H -S -n -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-pnfeworwdazbyunqveycdgqwduarikhx; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/setup.py; rm -rf "/root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/" > /dev/null 2>&1'"'"'"'"'"'"'"'"' && sleep 0'"'"''
+<anclient2.magesh.com> (0, '\r\n{"invocation": {"module_args": {"filter": "*", "gather_subset": ["all"], "fact_path": "/etc/ansible/facts.d", "gather_timeout": 10}}, "ansible_facts": {"ansible_product_serial": "VMware-56 4d c3 c1 50 53 56 04-8a 3e 25 5a 1a c4 a7 12", "ansible_form_factor": "Other", "ansible_distribution_file_parsed": true, "ansible_fips": false, "ansible_service_mgr": "systemd", "ansible_user_id": "root", "ansible_selinux_python_present": true, "ansible_userspace_bits": "64", "ansible_ssh_host_key_rsa_public": "AAAAB3NzaC1yc2EAAAADAQABAAABAQDIxGw9tJ0C7DT+q9hU6hmOWo1MxJkvo55u6KOISf2AWtwX6+7HDHNIoD1wEiJ5OLi/3dKqTOlgnkZC2NH3rMUnQTG+JvdJEqlTzos6KJwVV54bPPvM0D7P6sbtWfgodTTrTuZJW0Z6kY3+bJh+cY0ROZ5JXOxP7K1Dh2fURg+F6pgkzXwx5llf/SNjvjBzIylnVu3ml4jj7EdsmUA0hgvUrenvuPt6iCaipA2RNrEDUB3tXsvkOJvfnxox6Y/NsqcXbY8kqjo+c3moB5795sPE8pC07R2NE0t5mIbLUbPiIa5y7FoHtsKUkmYnJqftj5jopGpma7bwIThRhmCVFrQf", "gather_subset": ["all"], "ansible_real_user_id": 0, "ansible_architecture": "x86_64", "ansible_local": {}, "ansible_distribution_version": "7.9.2009", "ansible_domain": "magesh.com", "ansible_distribution_file_path": "/etc/redhat-release", "ansible_user_shell": "/bin/bash", "ansible_date_time": {"weekday_number": "3", "iso8601_basic_short": "20211103T083454", "tz": "EDT", "weeknumber": "44", "hour": "08", "year": "2021", "minute": "34", "tz_offset": "-0400", "month": "11", "epoch": "1635942894", "iso8601_micro": "2021-11-03T12:34:54.559431Z", "weekday": "Wednesday", "time": "08:34:54", "date": "2021-11-03", "iso8601": "2021-11-03T12:34:54Z", "day": "03", "iso8601_basic": "20211103T083454559353", "second": "54"}, "ansible_ssh_host_key_ed25519_public": "AAAAC3NzaC1lZDI1NTE5AAAAIFFutd4lreX8kv9tlmF1Xk71eeRQe9fWAn8gGonAy3kz", "ansible_processor_cores": 1, "ansible_virtualization_role": "guest", "ansible_distribution_file_variety": "RedHat", "ansible_env": {"USERNAME": "root", "LANG": "en_US.UTF-8", "TERM": "xterm", "SHELL": "/bin/bash", "XDG_RUNTIME_DIR": "/run/user/0", "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-pnfeworwdazbyunqveycdgqwduarikhx; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/setup.py; rm -rf \\"/root/.ansible/tmp/ansible-tmp-1635942893.96-202658826972049/\\" > /dev/null 2>&1", "SHLVL": "1", "HOME": "/root", "SUDO_UID": "0", "SUDO_GID": "0", "PWD": "/root", "LOGNAME": "root", "USER": "root", "PATH": "/sbin:/bin:/usr/sbin:/usr/bin", "MAIL": "/var/mail/root", "SUDO_USER": "root", "LS_COLORS": "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=01;36:*.spx=01;36:*.xspf=01;36:", "XDG_SESSION_ID": "3", "_": "/usr/bin/python"}, "ansible_effective_group_id": 0, "ansible_docker0": {"macaddress": "02:42:56:43:3c:f0", "features": {"tx_checksum_ipv4": "off [fixed]", "generic_receive_offload": "on", "tx_checksum_ipv6": "off [fixed]", "tx_scatter_gather_fraglist": "on", "rx_all": "off [fixed]", "highdma": "on", "rx_fcs": "off [fixed]", "tx_lockless": "on [fixed]", "tx_tcp_ecn_segmentation": "on", "rx_udp_tunnel_port_offload": "off [fixed]", "tx_tcp6_segmentation": "on", "tx_gso_robust": "on", "tx_ipip_segmentation": "on", "tx_tcp_mangleid_segmentation": "on", "tx_checksumming": "on", "vlan_challenged": "off [fixed]", "loopback": "off [fixed]", "fcoe_mtu": "off [fixed]", "scatter_gather": "on", "tx_checksum_sctp": "off [fixed]", "tx_vlan_stag_hw_insert": "on", "rx_vlan_stag_hw_parse": "off [fixed]", "tx_gso_partial": "on", "rx_gro_hw": "off [fixed]", "rx_vlan_stag_filter": "off [fixed]", "large_receive_offload": "off [fixed]", "tx_scatter_gather": "on", "rx_checksumming": "off [fixed]", "tx_tcp_segmentation": "on", "netns_local": "on [fixed]", "busy_poll": "off [fixed]", "generic_segmentation_offload": "on", "tx_udp_tnl_segmentation": "on", "tcp_segmentation_offload": "on", "l2_fwd_offload": "off [fixed]", "rx_vlan_offload": "off [fixed]", "ntuple_filters": "off [fixed]", "tx_gre_csum_segmentation": "on", "tx_nocache_copy": "off", "tx_udp_tnl_csum_segmentation": "on", "udp_fragmentation_offload": "on", "tx_sctp_segmentation": "on", "tx_sit_segmentation": "on", "tx_checksum_fcoe_crc": "off [fixed]", "hw_tc_offload": "off [fixed]", "tx_checksum_ip_generic": "on", "tx_fcoe_segmentation": "on", "rx_vlan_filter": "off [fixed]", "tx_vlan_offload": "on", "receive_hashing": "off [fixed]", "tx_gre_segmentation": "on"}, "interfaces": [], "id": "8000.024256433cf0", "mtu": 1500, "device": "docker0", "promisc": false, "stp": false, "ipv4": {"broadcast": "172.17.255.255", "netmask": "255.255.0.0", "network": "172.17.0.0", "address": "172.17.0.1"}, "active": false, "timestamping": ["rx_software", "software"], "type": "bridge", "hw_timestamp_filters": []}, "ansible_bios_version": "6.00", "ansible_processor": ["0", "GenuineIntel", "Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz"], "ansible_virtualization_type": "VMware", "ansible_lo": {"features": {"tx_checksum_ipv4": "off [fixed]", "generic_receive_offload": "on", "tx_checksum_ipv6": "off [fixed]", "tx_scatter_gather_fraglist": "on [fixed]", "rx_all": "off [fixed]", "highdma": "on [fixed]", "rx_fcs": "off [fixed]", "tx_lockless": "on [fixed]", "tx_tcp_ecn_segmentation": "on", "rx_udp_tunnel_port_offload": "off [fixed]", "tx_tcp6_segmentation": "on", "tx_gso_robust": "off [fixed]", "tx_ipip_segmentation": "off [fixed]", "tx_tcp_mangleid_segmentation": "on", "tx_checksumming": "on", "vlan_challenged": "on [fixed]", "loopback": "on [fixed]", "fcoe_mtu": "off [fixed]", "scatter_gather": "on", "tx_checksum_sctp": "on [fixed]", "tx_vlan_stag_hw_insert": "off [fixed]", "rx_vlan_stag_hw_parse": "off [fixed]", "tx_gso_partial": "off [fixed]", "rx_gro_hw": "off [fixed]", "rx_vlan_stag_filter": "off [fixed]", "large_receive_offload": "off [fixed]", "tx_scatter_gather": "on [fixed]", "rx_checksumming": "on [fixed]", "tx_tcp_segmentation": "on", "netns_local": "on [fixed]", "busy_poll": "off [fixed]", "generic_segmentation_offload": "on", "tx_udp_tnl_segmentation": "off [fixed]", "tcp_segmentation_offload": "on", "l2_fwd_offload": "off [fixed]", "rx_vlan_offload": "off [fixed]", "ntuple_filters": "off [fixed]", "tx_gre_csum_segmentation": "off [fixed]", "tx_nocache_copy": "off [fixed]", "tx_udp_tnl_csum_segmentation": "off [fixed]", "udp_fragmentation_offload": "on", "tx_sctp_segmentation": "on", "tx_sit_segmentation": "off [fixed]", "tx_checksum_fcoe_crc": "off [fixed]", "hw_tc_offload": "off [fixed]", "tx_checksum_ip_generic": "on [fixed]", "tx_fcoe_segmentation": "off [fixed]", "rx_vlan_filter": "off [fixed]", "tx_vlan_offload": "off [fixed]", "receive_hashing": "off [fixed]", "tx_gre_segmentation": "off [fixed]"}, "hw_timestamp_filters": [], "mtu": 65536, "device": "lo", "promisc": false, "timestamping": ["rx_software", "software"], "ipv4": {"broadcast": "host", "netmask": "255.0.0.0", "network": "127.0.0.0", "address": "127.0.0.1"}, "ipv6": [{"scope": "host", "prefix": "128", "address": "::1"}], "active": true, "type": "loopback"}, "ansible_memtotal_mb": 972, "ansible_ssh_host_key_ecdsa_public": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCE7tWT4t267swaDx9bE3n9XcV3NUigfJTfRpsiOSrqkFON3A0jc31yjPnkKZtyw9HNC2pxGZyf/yUeCNLhu58w=", "ansible_device_links": {"masters": {"loop1": ["dm-2"], "loop0": ["dm-2"], "sda2": ["dm-0", "dm-1"]}, "labels": {}, "ids": {"sr0": ["ata-VMware_Virtual_IDE_CDROM_Drive_10000000000000000001"], "sda2": ["lvm-pv-uuid-gfdlit-2FVv-Rzkl-j9CQ-mx2K-4i2v-ZAaLuq"], "dm-0": ["dm-name-centos-root", "dm-uuid-LVM-p6QWfXfyQ9dAJ17kwD74LAsn1ijU7Y0HHBdZDTcSq230xJx5yNoaHcSjSZL3NCnt"], "dm-1": ["dm-name-centos-swap", "dm-uuid-LVM-p6QWfXfyQ9dAJ17kwD74LAsn1ijU7Y0Hrszr6J2Bt61CYhXYqMHuMDKFrg0k92LB"]}, "uuids": {"loop0": ["81f42752-846f-44e4-9297-be571965f05c"], "sda1": ["3acdb1d4-cf1b-4e57-b3ab-c9e30bccb565"], "dm-0": ["02c1725d-a878-4610-b010-3dce7f1875d7"], "dm-1": ["c127a283-9ff8-4259-b5b4-870f8146e869"]}}, "ansible_default_ipv4": {"macaddress": "00:50:56:31:28:0b", "network": "192.168.16.0", "mtu": 1500, "broadcast": "192.168.16.255", "alias": "ens33", "netmask": "255.255.255.0", "address": "192.168.16.139", "interface": "ens33", "type": "ether", "gateway": "192.168.16.2"}, "ansible_swapfree_mb": 2047, "ansible_default_ipv6": {}, "ansible_distribution_release": "Core", "ansible_system_vendor": "VMware, Inc.", "ansible_apparmor": {"status": "disabled"}, "ansible_cmdline": {"LANG": "en_US.UTF-8", "BOOT_IMAGE": "/vmlinuz-3.10.0-1160.45.1.el7.x86_64", "quiet": true, "rhgb": true, "rd.lvm.lv": "centos/swap", "crashkernel": "auto", "ro": true, "root": "/dev/mapper/centos-root"}, "ansible_effective_user_id": 0, "ansible_user_gid": 0, "ansible_selinux": {"status": "enabled", "policyvers": 31, "type": "targeted", "mode": "enforcing", "config_mode": "enforcing"}, "ansible_product_version": "None", "ansible_os_family": "RedHat", "ansible_userspace_architecture": "x86_64", "ansible_product_uuid": "C1C34D56-5350-0456-8A3E-255A1AC4A712", "ansible_system": "Linux", "ansible_pkg_mgr": "yum", "ansible_memfree_mb": 432, "ansible_devices": {"sr0": {"scheduler_mode": "deadline", "rotational": "1", "vendor": "NECVMWar", "sectors": "2097151", "links": {"masters": [], "labels": [], "ids": ["ata-VMware_Virtual_IDE_CDROM_Drive_10000000000000000001"], "uuids": []}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)", "sectorsize": "512", "removable": "1", "support_discard": "0", "model": "VMware IDE CDR10", "partitions": {}, "holders": [], "size": "1024.00 MB"}, "sda": {"scheduler_mode": "deadline", "rotational": "1", "vendor": "VMware,", "sectors": "62914560", "links": {"masters": [], "labels": [], "ids": [], "uuids": []}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "SCSI storage controller: Broadcom / LSI 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 01)", "sectorsize": "512", "removable": "0", "support_discard": "0", "model": "VMware Virtual S", "partitions": {"sda2": {"sectorsize": 512, "uuid": null, "links": {"masters": ["dm-0", "dm-1"], "labels": [], "ids": ["lvm-pv-uuid-gfdlit-2FVv-Rzkl-j9CQ-mx2K-4i2v-ZAaLuq"], "uuids": []}, "sectors": "61888512", "start": "1026048", "holders": ["centos-root", "centos-swap"], "size": "29.51 GB"}, "sda1": {"sectorsize": 512, "uuid": "3acdb1d4-cf1b-4e57-b3ab-c9e30bccb565", "links": {"masters": [], "labels": [], "ids": [], "uuids": ["3acdb1d4-cf1b-4e57-b3ab-c9e30bccb565"]}, "sectors": "1024000", "start": "2048", "holders": [], "size": "500.00 MB"}}, "holders": [], "size": "30.00 GB"}, "loop1": {"scheduler_mode": "", "rotational": "1", "vendor": null, "sectors": "4194304", "links": {"masters": ["dm-2"], "labels": [], "ids": [], "uuids": []}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "", "sectorsize": "512", "removable": "0", "support_discard": "4096", "model": null, "partitions": {}, "holders": ["docker-253:0-11837-pool"], "size": "2.00 GB"}, "loop0": {"scheduler_mode": "", "rotational": "1", "vendor": null, "sectors": "209715200", "links": {"masters": ["dm-2"], "labels": [], "ids": [], "uuids": ["81f42752-846f-44e4-9297-be571965f05c"]}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "", "sectorsize": "512", "removable": "0", "support_discard": "4096", "model": null, "partitions": {}, "holders": ["docker-253:0-11837-pool"], "size": "100.00 GB"}, "dm-2": {"scheduler_mode": "", "rotational": "1", "vendor": null, "sectors": "209715200", "links": {"masters": [], "labels": [], "ids": [], "uuids": []}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "", "sectorsize": "512", "removable": "0", "support_discard": "4096", "model": null, "partitions": {}, "holders": [], "size": "100.00 GB"}, "dm-0": {"scheduler_mode": "", "rotational": "1", "vendor": null, "sectors": "57597952", "links": {"masters": [], "labels": [], "ids": ["dm-name-centos-root", "dm-uuid-LVM-p6QWfXfyQ9dAJ17kwD74LAsn1ijU7Y0HHBdZDTcSq230xJx5yNoaHcSjSZL3NCnt"], "uuids": ["02c1725d-a878-4610-b010-3dce7f1875d7"]}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "", "sectorsize": "512", "removable": "0", "support_discard": "0", "model": null, "partitions": {}, "holders": [], "size": "27.46 GB"}, "dm-1": {"scheduler_mode": "", "rotational": "1", "vendor": null, "sectors": "4194304", "links": {"masters": [], "labels": [], "ids": ["dm-name-centos-swap", "dm-uuid-LVM-p6QWfXfyQ9dAJ17kwD74LAsn1ijU7Y0Hrszr6J2Bt61CYhXYqMHuMDKFrg0k92LB"], "uuids": ["c127a283-9ff8-4259-b5b4-870f8146e869"]}, "sas_device_handle": null, "sas_address": null, "virtual": 1, "host": "", "sectorsize": "512", "removable": "0", "support_discard": "0", "model": null, "partitions": {}, "holders": [], "size": "2.00 GB"}}, "ansible_user_uid": 0, "ansible_lvm": {"pvs": {"/dev/sda2": {"free_g": "0.04", "size_g": "29.51", "vg": "centos"}}, "lvs": {"root": {"size_g": "27.46", "vg": "centos"}, "swap": {"size_g": "2.00", "vg": "centos"}}, "vgs": {"centos": {"free_g": "0.04", "size_g": "29.51", "num_lvs": "2", "num_pvs": "1"}}}, "ansible_distribution": "CentOS", "ansible_user_dir": "/root", "ansible_dns": {"nameservers": ["192.168.16.2"], "search": ["localdomain", "magesh.com"]}, "ansible_distribution_major_version": "7", "module_setup": true, "ansible_processor_count": 1, "ansible_hostname": "anclient2", "ansible_processor_vcpus": 1, "ansible_swaptotal_mb": 2047, "ansible_lsb": {}, "ansible_real_group_id": 0, "ansible_bios_date": "07/22/2020", "ansible_ens33": {"macaddress": "00:50:56:31:28:0b", "features": {"tx_checksum_ipv4": "off [fixed]", "generic_receive_offload": "on", "tx_checksum_ipv6": "off [fixed]", "tx_scatter_gather_fraglist": "off [fixed]", "rx_all": "off", "highdma": "off [fixed]", "rx_fcs": "off", "tx_lockless": "off [fixed]", "tx_tcp_ecn_segmentation": "off [fixed]", "rx_udp_tunnel_port_offload": "off [fixed]", "tx_tcp6_segmentation": "off [fixed]", "tx_gso_robust": "off [fixed]", "tx_ipip_segmentation": "off [fixed]", "tx_tcp_mangleid_segmentation": "off", "tx_checksumming": "on", "vlan_challenged": "off [fixed]", "loopback": "off [fixed]", "fcoe_mtu": "off [fixed]", "scatter_gather": "on", "tx_checksum_sctp": "off [fixed]", "tx_vlan_stag_hw_insert": "off [fixed]", "rx_vlan_stag_hw_parse": "off [fixed]", "tx_gso_partial": "off [fixed]", "rx_gro_hw": "off [fixed]", "rx_vlan_stag_filter": "off [fixed]", "large_receive_offload": "off [fixed]", "tx_scatter_gather": "on", "rx_checksumming": "off", "tx_tcp_segmentation": "on", "netns_local": "off [fixed]", "busy_poll": "off [fixed]", "generic_segmentation_offload": "on", "tx_udp_tnl_segmentation": "off [fixed]", "tcp_segmentation_offload": "on", "l2_fwd_offload": "off [fixed]", "rx_vlan_offload": "on", "ntuple_filters": "off [fixed]", "tx_gre_csum_segmentation": "off [fixed]", "tx_nocache_copy": "off", "tx_udp_tnl_csum_segmentation": "off [fixed]", "udp_fragmentation_offload": "off [fixed]", "tx_sctp_segmentation": "off [fixed]", "tx_sit_segmentation": "off [fixed]", "tx_checksum_fcoe_crc": "off [fixed]", "hw_tc_offload": "off [fixed]", "tx_checksum_ip_generic": "on", "tx_fcoe_segmentation": "off [fixed]", "rx_vlan_filter": "on [fixed]", "tx_vlan_offload": "on [fixed]", "receive_hashing": "off [fixed]", "tx_gre_segmentation": "off [fixed]"}, "type": "ether", "pciid": "0000:02:01.0", "module": "e1000", "mtu": 1500, "device": "ens33", "promisc": false, "timestamping": ["tx_software", "rx_software", "software"], "ipv4": {"broadcast": "192.168.16.255", "netmask": "255.255.255.0", "network": "192.168.16.0", "address": "192.168.16.139"}, "ipv6": [{"scope": "link", "prefix": "64", "address": "fe80::5ff2:6cfd:9309:ef02"}], "active": true, "speed": 1000, "hw_timestamp_filters": []}, "ansible_all_ipv6_addresses": ["fe80::5ff2:6cfd:9309:ef02"], "ansible_interfaces": ["lo", "docker0", "ens33"], "ansible_uptime_seconds": 1346, "ansible_machine_id": "12c0e69d269342e68f36a7b85ac88cb8", "ansible_kernel": "3.10.0-1160.45.1.el7.x86_64", "ansible_user_gecos": "root", "ansible_system_capabilities_enforced": "True", "ansible_python": {"executable": "/usr/bin/python", "version": {"micro": 5, "major": 2, "releaselevel": "final", "serial": 0, "minor": 7}, "type": "CPython", "has_sslcontext": true, "version_info": [2, 7, 5, "final", 0]}, "ansible_processor_threads_per_core": 1, "ansible_fqdn": "anclient2.magesh.com", "ansible_mounts": [{"block_used": 964354, "uuid": "02c1725d-a878-4610-b010-3dce7f1875d7", "size_total": 29475753984, "block_total": 7196229, "mount": "/", "block_available": 6231875, "size_available": 25525760000, "fstype": "xfs", "inode_total": 28798976, "options": "rw,seclabel,relatime,attr2,inode64,noquota", "device": "/dev/mapper/centos-root", "inode_used": 49212, "block_size": 4096, "inode_available": 28749764}, {"block_used": 54932, "uuid": "3acdb1d4-cf1b-4e57-b3ab-c9e30bccb565", "size_total": 520794112, "block_total": 127147, "mount": "/boot", "block_available": 72215, "size_available": 295792640, "fstype": "xfs", "inode_total": 512000, "options": "rw,seclabel,relatime,attr2,inode64,noquota", "device": "/dev/sda1", "inode_used": 350, "block_size": 4096, "inode_available": 511650}], "ansible_memory_mb": {"real": {"total": 972, "used": 540, "free": 432}, "swap": {"cached": 0, "total": 2047, "free": 2047, "used": 0}, "nocache": {"used": 317, "free": 655}}, "ansible_nodename": "anclient2.magesh.com", "ansible_product_name": "VMware Virtual Platform", "ansible_machine": "x86_64", "ansible_system_capabilities": ["cap_chown", "cap_dac_override", "cap_dac_read_search", "cap_fowner", "cap_fsetid", "cap_kill", "cap_setgid", "cap_setuid", "cap_setpcap", "cap_linux_immutable", "cap_net_bind_service", "cap_net_broadcast", "cap_net_admin", "cap_net_raw", "cap_ipc_lock", "cap_ipc_owner", "cap_sys_module", "cap_sys_rawio", "cap_sys_chroot", "cap_sys_ptrace", "cap_sys_pacct", "cap_sys_admin", "cap_sys_boot", "cap_sys_nice", "cap_sys_resource", "cap_sys_time", "cap_sys_tty_config", "cap_mknod", "cap_lease", "cap_audit_write", "cap_audit_control", "cap_setfcap", "cap_mac_override", "cap_mac_admin", "cap_syslog", "35", "36+ep"], "ansible_all_ipv4_addresses": ["172.17.0.1", "192.168.16.139"], "ansible_python_version": "2.7.5"}}\r\n', 'Shared connection to anclient2.magesh.com closed.\r\n')
+ok: [anclient2.magesh.com]
+META: ran handlers
+
+TASK [check file service] ********************************************************************************************************
+task path: /etc/ansible/auditd3.yml:6
+Using module file /usr/lib/python2.7/site-packages/ansible/modules/commands/command.py
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'echo ~ && sleep 0'"'"''
+<anclient2.magesh.com> (0, '/root\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'( umask 77 && mkdir -p "` echo /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519 `" && echo ansible-tmp-1635942894.95-191434708908519="` echo /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519 `" ) && sleep 0'"'"''
+<anclient2.magesh.com> (0, 'ansible-tmp-1635942894.95-191434708908519=/root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519\n', '')
+<anclient2.magesh.com> PUT /tmp/tmpg0_Unr TO /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/command.py
+<anclient2.magesh.com> SSH: EXEC sftp -b - -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 '[anclient2.magesh.com]'
+<anclient2.magesh.com> (0, 'sftp> put /tmp/tmpg0_Unr /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/command.py\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'chmod u+x /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/ /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/command.py && sleep 0'"'"''
+<anclient2.magesh.com> (0, '', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 -tt anclient2.magesh.com '/bin/sh -c '"'"'sudo -H -S -n -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-izxpizxgemrwolhvrdzvwsylkltfgjhq; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/command.py; rm -rf "/root/.ansible/tmp/ansible-tmp-1635942894.95-191434708908519/" > /dev/null 2>&1'"'"'"'"'"'"'"'"' && sleep 0'"'"''
+<anclient2.magesh.com> (0, '\r\n{"changed": true, "end": "2021-11-03 08:34:55.097378", "stdout": "active", "cmd": "systemctl status auditd | grep Active | awk \'{ print $2 }\'", "rc": 0, "start": "2021-11-03 08:34:55.082671", "stderr": "", "delta": "0:00:00.014707", "invocation": {"module_args": {"warn": true, "executable": null, "_uses_shell": true, "_raw_params": "systemctl status auditd | grep Active | awk \'{ print $2 }\'", "removes": null, "creates": null, "chdir": null, "stdin": null}}}\r\n', 'Shared connection to anclient2.magesh.com closed.\r\n')
+changed: [anclient2.magesh.com] => {
+    "changed": true,
+    "cmd": "systemctl status auditd | grep Active | awk '{ print $2 }'",
+    "delta": "0:00:00.014707",
+    "end": "2021-11-03 08:34:55.097378",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "systemctl status auditd | grep Active | awk '{ print $2 }'",
+            "_uses_shell": true,
+            "chdir": null,
+            "creates": null,
+            "executable": null,
+            "removes": null,
+            "stdin": null,
+            "warn": true
+        }
+    },
+    "rc": 0,
+    "start": "2021-11-03 08:34:55.082671",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "active",
+    "stdout_lines": [
+        "active"
+    ]
+}
+
+TASK [debug] *********************************************************************************************************************
+task path: /etc/ansible/auditd3.yml:9
+ok: [anclient2.magesh.com] => {
+    "auditdstatus": {
+        "changed": true,
+        "cmd": "systemctl status auditd | grep Active | awk '{ print $2 }'",
+        "delta": "0:00:00.014707",
+        "end": "2021-11-03 08:34:55.097378",
+        "failed": false,
+        "rc": 0,
+        "start": "2021-11-03 08:34:55.082671",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "active",
+        "stdout_lines": [
+            "active"
+        ]
+    }
+}
+
+TASK [check file service] ********************************************************************************************************
+task path: /etc/ansible/auditd3.yml:10
+Using module file /usr/lib/python2.7/site-packages/ansible/modules/commands/command.py
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'echo ~ && sleep 0'"'"''
+<anclient2.magesh.com> (0, '/root\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'( umask 77 && mkdir -p "` echo /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458 `" && echo ansible-tmp-1635942895.27-19395240805458="` echo /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458 `" ) && sleep 0'"'"''
+<anclient2.magesh.com> (0, 'ansible-tmp-1635942895.27-19395240805458=/root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458\n', '')
+<anclient2.magesh.com> PUT /tmp/tmp_sNTN5 TO /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/command.py
+<anclient2.magesh.com> SSH: EXEC sftp -b - -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 '[anclient2.magesh.com]'
+<anclient2.magesh.com> (0, 'sftp> put /tmp/tmp_sNTN5 /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/command.py\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'chmod u+x /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/ /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/command.py && sleep 0'"'"''
+<anclient2.magesh.com> (0, '', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 -tt anclient2.magesh.com '/bin/sh -c '"'"'sudo -H -S -n -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-lafbnyedjlpxxiglisuctsjflvtewdmh; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/command.py; rm -rf "/root/.ansible/tmp/ansible-tmp-1635942895.27-19395240805458/" > /dev/null 2>&1'"'"'"'"'"'"'"'"' && sleep 0'"'"''
+<anclient2.magesh.com> (0, '\r\n{"changed": true, "end": "2021-11-03 08:34:55.425184", "stdout": "/sbin/auditd", "cmd": "for i in `auditctl -s | grep -i pid | awk \'{ print $2 }\'`; do ps -ef |grep $i|grep auditd|awk \'{ print $8 }\'; done", "rc": 0, "start": "2021-11-03 08:34:55.394025", "stderr": "", "delta": "0:00:00.031159", "invocation": {"module_args": {"warn": true, "executable": null, "_uses_shell": true, "_raw_params": "for i in `auditctl -s | grep -i pid | awk \'{ print $2 }\'`; do ps -ef |grep $i|grep auditd|awk \'{ print $8 }\'; done", "removes": null, "creates": null, "chdir": null, "stdin": null}}}\r\n', 'Shared connection to anclient2.magesh.com closed.\r\n')
+changed: [anclient2.magesh.com] => {
+    "changed": true,
+    "cmd": "for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do ps -ef |grep $i|grep auditd|awk '{ print $8 }'; done",
+    "delta": "0:00:00.031159",
+    "end": "2021-11-03 08:34:55.425184",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do ps -ef |grep $i|grep auditd|awk '{ print $8 }'; done",
+            "_uses_shell": true,
+            "chdir": null,
+            "creates": null,
+            "executable": null,
+            "removes": null,
+            "stdin": null,
+            "warn": true
+        }
+    },
+    "rc": 0,
+    "start": "2021-11-03 08:34:55.394025",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "/sbin/auditd",
+    "stdout_lines": [
+        "/sbin/auditd"
+    ]
+}
+
+TASK [debug] *********************************************************************************************************************
+task path: /etc/ansible/auditd3.yml:13
+ok: [anclient2.magesh.com] => {
+    "taniumpid": {
+        "changed": true,
+        "cmd": "for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do ps -ef |grep $i|grep auditd|awk '{ print $8 }'; done",
+        "delta": "0:00:00.031159",
+        "end": "2021-11-03 08:34:55.425184",
+        "failed": false,
+        "rc": 0,
+        "start": "2021-11-03 08:34:55.394025",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "/sbin/auditd",
+        "stdout_lines": [
+            "/sbin/auditd"
+        ]
+    }
+}
+
+TASK [Kill auditd failed pid] ****************************************************************************************************
+task path: /etc/ansible/auditd3.yml:14
+Using module file /usr/lib/python2.7/site-packages/ansible/modules/commands/command.py
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'echo ~ && sleep 0'"'"''
+<anclient2.magesh.com> (0, '/root\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'( umask 77 && mkdir -p "` echo /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853 `" && echo ansible-tmp-1635942895.6-40847319546853="` echo /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853 `" ) && sleep 0'"'"''
+<anclient2.magesh.com> (0, 'ansible-tmp-1635942895.6-40847319546853=/root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853\n', '')
+<anclient2.magesh.com> PUT /tmp/tmpcMQXyQ TO /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/command.py
+<anclient2.magesh.com> SSH: EXEC sftp -b - -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 '[anclient2.magesh.com]'
+<anclient2.magesh.com> (0, 'sftp> put /tmp/tmpcMQXyQ /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/command.py\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'chmod u+x /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/ /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/command.py && sleep 0'"'"''
+<anclient2.magesh.com> (0, '', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 -tt anclient2.magesh.com '/bin/sh -c '"'"'sudo -H -S -n -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-zecyyvqaosqbjicwhxlxzlyeaftuwprz; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/command.py; rm -rf "/root/.ansible/tmp/ansible-tmp-1635942895.6-40847319546853/" > /dev/null 2>&1'"'"'"'"'"'"'"'"' && sleep 0'"'"''
+<anclient2.magesh.com> (0, '\r\n{"changed": true, "end": "2021-11-03 08:34:55.776319", "stdout": "", "cmd": "for i in `auditctl -s | grep -i pid | awk \'{ print $2 }\'`; do kill -9 $i; done", "rc": 0, "start": "2021-11-03 08:34:55.759136", "stderr": "", "delta": "0:00:00.017183", "invocation": {"module_args": {"warn": true, "executable": null, "_uses_shell": true, "_raw_params": "for i in `auditctl -s | grep -i pid | awk \'{ print $2 }\'`; do kill -9 $i; done", "removes": null, "creates": null, "chdir": null, "stdin": null}}}\r\n', 'Shared connection to anclient2.magesh.com closed.\r\n')
+changed: [anclient2.magesh.com] => {
+    "changed": true,
+    "cmd": "for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do kill -9 $i; done",
+    "delta": "0:00:00.017183",
+    "end": "2021-11-03 08:34:55.776319",
+    "invocation": {
+        "module_args": {
+            "_raw_params": "for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do kill -9 $i; done",
+            "_uses_shell": true,
+            "chdir": null,
+            "creates": null,
+            "executable": null,
+            "removes": null,
+            "stdin": null,
+            "warn": true
+        }
+    },
+    "rc": 0,
+    "start": "2021-11-03 08:34:55.759136",
+    "stderr": "",
+    "stderr_lines": [],
+    "stdout": "",
+    "stdout_lines": []
+}
+
+TASK [Start auditd service] ******************************************************************************************************
+task path: /etc/ansible/auditd3.yml:20
+Using module file /usr/lib/python2.7/site-packages/ansible/modules/system/systemd.py
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'echo ~ && sleep 0'"'"''
+<anclient2.magesh.com> (0, '/root\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'( umask 77 && mkdir -p "` echo /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757 `" && echo ansible-tmp-1635942895.99-15954163078757="` echo /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757 `" ) && sleep 0'"'"''
+<anclient2.magesh.com> (0, 'ansible-tmp-1635942895.99-15954163078757=/root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757\n', '')
+<anclient2.magesh.com> PUT /tmp/tmpwS4OIB TO /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/systemd.py
+<anclient2.magesh.com> SSH: EXEC sftp -b - -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 '[anclient2.magesh.com]'
+<anclient2.magesh.com> (0, 'sftp> put /tmp/tmpwS4OIB /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/systemd.py\n', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 anclient2.magesh.com '/bin/sh -c '"'"'chmod u+x /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/ /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/systemd.py && sleep 0'"'"''
+<anclient2.magesh.com> (0, '', '')
+<anclient2.magesh.com> ESTABLISH SSH CONNECTION FOR USER: None
+<anclient2.magesh.com> SSH: EXEC ssh -C -o ControlMaster=auto -o ControlPersist=60s -o KbdInteractiveAuthentication=no -o PreferredAuthentications=gssapi-with-mic,gssapi-keyex,hostbased,publickey -o PasswordAuthentication=no -o ConnectTimeout=10 -o ControlPath=/root/.ansible/cp/bda0e91c65 -tt anclient2.magesh.com '/bin/sh -c '"'"'sudo -H -S -n -u root /bin/sh -c '"'"'"'"'"'"'"'"'echo BECOME-SUCCESS-lveowxricffjfjpapnsnruhojntdjtsd; /usr/bin/python /root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/systemd.py; rm -rf "/root/.ansible/tmp/ansible-tmp-1635942895.99-15954163078757/" > /dev/null 2>&1'"'"'"'"'"'"'"'"' && sleep 0'"'"''
+<anclient2.magesh.com> (0, '\r\n{"status": {"ExecStart": "{ path=/sbin/auditd ; argv[]=/sbin/auditd ; ignore_errors=no ; start_time=[Wed 2021-11-03 08:18:25 EDT] ; stop_time=[Wed 2021-11-03 08:18:26 EDT] ; pid=1558 ; code=exited ; status=0 }", "TimeoutStopUSec": "1min 30s", "RuntimeDirectoryMode": "0755", "GuessMainPID": "yes", "ActiveExitTimestamp": "Wed 2021-11-03 08:34:55 EDT", "ExecMainCode": "2", "UnitFileState": "enabled", "ExecMainPID": "1559", "LimitSIGPENDING": "3796", "FileDescriptorStoreMax": "0", "LoadState": "loaded", "ProtectHome": "no", "TTYVTDisallocate": "no", "ExecStartPost": "{ path=/sbin/augenrules ; argv[]=/sbin/augenrules --load ; ignore_errors=yes ; start_time=[Wed 2021-11-03 08:18:26 EDT] ; stop_time=[Wed 2021-11-03 08:18:26 EDT] ; pid=1563 ; code=exited ; status=0 }", "TTYVHangup": "no", "WatchdogTimestampMonotonic": "0", "LimitSTACK": "18446744073709551615", "ActiveEnterTimestampMonotonic": "358405656", "AllowIsolate": "no", "AssertTimestamp": "Wed 2021-11-03 08:18:25 EDT", "IgnoreOnSnapshot": "no", "StartLimitAction": "none", "CPUSchedulingPriority": "0", "KillSignal": "15", "LimitFSIZE": "18446744073709551615", "IgnoreOnIsolate": "no", "LimitCPU": "18446744073709551615", "InactiveExitTimestamp": "Wed 2021-11-03 08:18:25 EDT", "NoNewPrivileges": "no", "MemoryLimit": "18446744073709551615", "TTYReset": "no", "CanStart": "yes", "JobTimeoutAction": "none", "Before": "sysinit.target shutdown.target systemd-update-utmp.service crond.service", "LimitAS": "18446744073709551615", "RootDirectoryStartOnly": "no", "InactiveExitTimestampMonotonic": "358222529", "SendSIGHUP": "no", "TimeoutStartUSec": "1min 30s", "Type": "forking", "SyslogPriority": "30", "SameProcessGroup": "no", "LimitNPROC": "3796", "UMask": "0022", "NonBlocking": "no", "DevicePolicy": "auto", "ExecMainStartTimestamp": "Wed 2021-11-03 08:18:26 EDT", "CapabilityBoundingSet": "18446744073709551615", "PIDFile": "/run/auditd.pid", "OOMScoreAdjust": "0", "Documentation": "man:auditd(8) https://github.com/linux-audit/audit-documentation", "StartLimitBurst": "5", "RefuseManualStart": "no", "KillMode": "control-group", "SyslogLevelPrefix": "yes", "LimitRSS": "18446744073709551615", "LimitRTPRIO": "0", "Delegate": "no", "TasksCurrent": "18446744073709551615", "LimitCORE": "18446744073709551615", "JobTimeoutUSec": "0", "TimerSlackNSec": "50000", "SubState": "failed", "CPUSchedulingResetOnFork": "no", "Result": "signal", "CPUShares": "18446744073709551615", "ConditionResult": "yes", "ConditionTimestampMonotonic": "358221575", "MainPID": "0", "StartupBlockIOWeight": "18446744073709551615", "ActiveEnterTimestamp": "Wed 2021-11-03 08:18:26 EDT", "FragmentPath": "/usr/lib/systemd/system/auditd.service", "StartupCPUShares": "18446744073709551615", "WatchdogUSec": "0", "ActiveState": "failed", "Nice": "0", "LimitDATA": "18446744073709551615", "UnitFilePreset": "enabled", "MemoryCurrent": "18446744073709551615", "LimitRTTIME": "18446744073709551615", "WantedBy": "multi-user.target", "SecureBits": "0", "RestartUSec": "100ms", "ConditionTimestamp": "Wed 2021-11-03 08:18:25 EDT", "CPUAccounting": "no", "RemainAfterExit": "no", "PrivateNetwork": "no", "Restart": "no", "CPUSchedulingPolicy": "0", "LimitNOFILE": "4096", "SendSIGKILL": "yes", "StatusErrno": "0", "RefuseManualStop": "yes", "SystemCallErrorNumber": "0", "TasksAccounting": "no", "NeedDaemonReload": "no", "StartLimitInterval": "10000000", "InactiveEnterTimestamp": "Wed 2021-11-03 08:34:55 EDT", "StandardInput": "null", "AssertTimestampMonotonic": "358221605", "DefaultDependencies": "no", "Requires": "system.slice", "TasksMax": "18446744073709551615", "CPUQuotaPerSecUSec": "infinity", "ExecMainStatus": "9", "LimitMEMLOCK": "65536", "StopWhenUnneeded": "no", "LimitMSGQUEUE": "819200", "AmbientCapabilities": "0", "Slice": "system.slice", "ExecMainExitTimestampMonotonic": "1348070874", "CollectMode": "inactive", "NotifyAccess": "none", "PermissionsStartOnly": "no", "BlockIOAccounting": "no", "CanStop": "no", "PrivateTmp": "no", "OnFailureJobMode": "replace", "AssertResult": "yes", "LimitLOCKS": "18446744073709551615", "ExecMainStartTimestampMonotonic": "358347655", "StandardError": "inherit", "LimitNICE": "0", "After": "systemd-tmpfiles-setup.service system.slice systemd-journald.socket local-fs.target", "FailureAction": "none", "CanIsolate": "no", "Conflicts": "shutdown.target", "StandardOutput": "journal", "MountFlags": "0", "InactiveEnterTimestampMonotonic": "1348071321", "MemoryAccounting": "no", "IgnoreSIGPIPE": "yes", "Transient": "no", "IOScheduling": "0", "Description": "Security Auditing Service", "ActiveExitTimestampMonotonic": "1348071321", "ExecMainExitTimestamp": "Wed 2021-11-03 08:34:55 EDT", "CanReload": "no", "ControlPID": "0", "BlockIOWeight": "18446744073709551615", "Names": "auditd.service", "ProtectSystem": "no", "PrivateDevices": "no", "Id": "auditd.service"}, "invocation": {"module_args": {"no_block": false, "name": "auditd", "enabled": null, "daemon_reload": false, "state": "started", "user": false, "masked": null}}, "state": "started", "changed": true, "name": "auditd"}\r\n', 'Shared connection to anclient2.magesh.com closed.\r\n')
+changed: [anclient2.magesh.com] => {
+    "changed": true,
+    "invocation": {
+        "module_args": {
+            "daemon_reload": false,
+            "enabled": null,
+            "masked": null,
+            "name": "auditd",
+            "no_block": false,
+            "state": "started",
+            "user": false
+        }
+    },
+    "name": "auditd",
+    "state": "started",
+    "status": {
+        "ActiveEnterTimestamp": "Wed 2021-11-03 08:18:26 EDT",
+        "ActiveEnterTimestampMonotonic": "358405656",
+        "ActiveExitTimestamp": "Wed 2021-11-03 08:34:55 EDT",
+        "ActiveExitTimestampMonotonic": "1348071321",
+        "ActiveState": "failed",
+        "After": "systemd-tmpfiles-setup.service system.slice systemd-journald.socket local-fs.target",
+        "AllowIsolate": "no",
+        "AmbientCapabilities": "0",
+        "AssertResult": "yes",
+        "AssertTimestamp": "Wed 2021-11-03 08:18:25 EDT",
+        "AssertTimestampMonotonic": "358221605",
+        "Before": "sysinit.target shutdown.target systemd-update-utmp.service crond.service",
+        "BlockIOAccounting": "no",
+        "BlockIOWeight": "18446744073709551615",
+        "CPUAccounting": "no",
+        "CPUQuotaPerSecUSec": "infinity",
+        "CPUSchedulingPolicy": "0",
+        "CPUSchedulingPriority": "0",
+        "CPUSchedulingResetOnFork": "no",
+        "CPUShares": "18446744073709551615",
+        "CanIsolate": "no",
+        "CanReload": "no",
+        "CanStart": "yes",
+        "CanStop": "no",
+        "CapabilityBoundingSet": "18446744073709551615",
+        "CollectMode": "inactive",
+        "ConditionResult": "yes",
+        "ConditionTimestamp": "Wed 2021-11-03 08:18:25 EDT",
+        "ConditionTimestampMonotonic": "358221575",
+        "Conflicts": "shutdown.target",
+        "ControlPID": "0",
+        "DefaultDependencies": "no",
+        "Delegate": "no",
+        "Description": "Security Auditing Service",
+        "DevicePolicy": "auto",
+        "Documentation": "man:auditd(8) https://github.com/linux-audit/audit-documentation",
+        "ExecMainCode": "2",
+        "ExecMainExitTimestamp": "Wed 2021-11-03 08:34:55 EDT",
+        "ExecMainExitTimestampMonotonic": "1348070874",
+        "ExecMainPID": "1559",
+        "ExecMainStartTimestamp": "Wed 2021-11-03 08:18:26 EDT",
+        "ExecMainStartTimestampMonotonic": "358347655",
+        "ExecMainStatus": "9",
+        "ExecStart": "{ path=/sbin/auditd ; argv[]=/sbin/auditd ; ignore_errors=no ; start_time=[Wed 2021-11-03 08:18:25 EDT] ; stop_time=[Wed 2021-11-03 08:18:26 EDT] ; pid=1558 ; code=exited ; status=0 }",
+        "ExecStartPost": "{ path=/sbin/augenrules ; argv[]=/sbin/augenrules --load ; ignore_errors=yes ; start_time=[Wed 2021-11-03 08:18:26 EDT] ; stop_time=[Wed 2021-11-03 08:18:26 EDT] ; pid=1563 ; code=exited ; status=0 }",
+        "FailureAction": "none",
+        "FileDescriptorStoreMax": "0",
+        "FragmentPath": "/usr/lib/systemd/system/auditd.service",
+        "GuessMainPID": "yes",
+        "IOScheduling": "0",
+        "Id": "auditd.service",
+        "IgnoreOnIsolate": "no",
+        "IgnoreOnSnapshot": "no",
+        "IgnoreSIGPIPE": "yes",
+        "InactiveEnterTimestamp": "Wed 2021-11-03 08:34:55 EDT",
+        "InactiveEnterTimestampMonotonic": "1348071321",
+        "InactiveExitTimestamp": "Wed 2021-11-03 08:18:25 EDT",
+        "InactiveExitTimestampMonotonic": "358222529",
+        "JobTimeoutAction": "none",
+        "JobTimeoutUSec": "0",
+        "KillMode": "control-group",
+        "KillSignal": "15",
+        "LimitAS": "18446744073709551615",
+        "LimitCORE": "18446744073709551615",
+        "LimitCPU": "18446744073709551615",
+        "LimitDATA": "18446744073709551615",
+        "LimitFSIZE": "18446744073709551615",
+        "LimitLOCKS": "18446744073709551615",
+        "LimitMEMLOCK": "65536",
+        "LimitMSGQUEUE": "819200",
+        "LimitNICE": "0",
+        "LimitNOFILE": "4096",
+        "LimitNPROC": "3796",
+        "LimitRSS": "18446744073709551615",
+        "LimitRTPRIO": "0",
+        "LimitRTTIME": "18446744073709551615",
+        "LimitSIGPENDING": "3796",
+        "LimitSTACK": "18446744073709551615",
+        "LoadState": "loaded",
+        "MainPID": "0",
+        "MemoryAccounting": "no",
+        "MemoryCurrent": "18446744073709551615",
+        "MemoryLimit": "18446744073709551615",
+        "MountFlags": "0",
+        "Names": "auditd.service",
+        "NeedDaemonReload": "no",
+        "Nice": "0",
+        "NoNewPrivileges": "no",
+        "NonBlocking": "no",
+        "NotifyAccess": "none",
+        "OOMScoreAdjust": "0",
+        "OnFailureJobMode": "replace",
+        "PIDFile": "/run/auditd.pid",
+        "PermissionsStartOnly": "no",
+        "PrivateDevices": "no",
+        "PrivateNetwork": "no",
+        "PrivateTmp": "no",
+        "ProtectHome": "no",
+        "ProtectSystem": "no",
+        "RefuseManualStart": "no",
+        "RefuseManualStop": "yes",
+        "RemainAfterExit": "no",
+        "Requires": "system.slice",
+        "Restart": "no",
+        "RestartUSec": "100ms",
+        "Result": "signal",
+        "RootDirectoryStartOnly": "no",
+        "RuntimeDirectoryMode": "0755",
+        "SameProcessGroup": "no",
+        "SecureBits": "0",
+        "SendSIGHUP": "no",
+        "SendSIGKILL": "yes",
+        "Slice": "system.slice",
+        "StandardError": "inherit",
+        "StandardInput": "null",
+        "StandardOutput": "journal",
+        "StartLimitAction": "none",
+        "StartLimitBurst": "5",
+        "StartLimitInterval": "10000000",
+        "StartupBlockIOWeight": "18446744073709551615",
+        "StartupCPUShares": "18446744073709551615",
+        "StatusErrno": "0",
+        "StopWhenUnneeded": "no",
+        "SubState": "failed",
+        "SyslogLevelPrefix": "yes",
+        "SyslogPriority": "30",
+        "SystemCallErrorNumber": "0",
+        "TTYReset": "no",
+        "TTYVHangup": "no",
+        "TTYVTDisallocate": "no",
+        "TasksAccounting": "no",
+        "TasksCurrent": "18446744073709551615",
+        "TasksMax": "18446744073709551615",
+        "TimeoutStartUSec": "1min 30s",
+        "TimeoutStopUSec": "1min 30s",
+        "TimerSlackNSec": "50000",
+        "Transient": "no",
+        "Type": "forking",
+        "UMask": "0022",
+        "UnitFilePreset": "enabled",
+        "UnitFileState": "enabled",
+        "WantedBy": "multi-user.target",
+        "WatchdogTimestampMonotonic": "0",
+        "WatchdogUSec": "0"
+    }
+}
+META: ran handlers
+META: ran handlers
+
+PLAY RECAP ***********************************************************************************************************************
+anclient2.magesh.com       : ok=7    changed=4    unreachable=0    failed=0
+
+[root@anserver ansible]#
