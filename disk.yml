@@ -1,0 +1,14 @@
+- name: 'diskusage'
+  hosts: client,client1
+  become: true
+  ignore_errors: yes
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: check filesystem used size
+      shell: df -m | awk 'NF==1 {fs=$0} NF>1 && $(NF-1)+0 > 10 {print fs $0 }' | awk '{print $6}' > /tmp/fsinfo{{ date }}
+    - name: check which directory using more space in FS
+      shell: for i in `cat /tmp/fsinfo{{ date }}`; do  find $i -type d -exec du -Sh {} + | sort -rh | head -n 5;done
+      register: directories
+    - debug: var=directories
