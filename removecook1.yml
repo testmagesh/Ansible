@@ -1,0 +1,25 @@
+- name: 'Removing Cookbok'
+  hosts: client,client1
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: create directory
+      file:
+        path: "/var/tmp/runlist{{ date }}"
+        state: directory
+
+    - name: Collect runlist
+      shell: sed 's/,/&\n/g' /etc/runlist > "/var/tmp/runlist{{ date }}/runlist1"
+    
+    - name: Removing Cookbook and redirecting to file
+      shell: cat "/var/tmp/runlist{{ date }}/runlist1" | grep -v "abc_rhel_base_v3" > "/var/tmp/runlist{{ date }}/runlist2"
+
+    - name: Single Line
+      shell: cat "/var/tmp/runlist{{ date }}/runlist2" | paste -s -d '' > "/var/tmp/runlist{{ date }}/runlist3"
+    
+    - name: echo
+      shell: echo < cat /var/tmp/runlist{{ date }}/runlist3
+      register: echo
+    - debug: var=echo

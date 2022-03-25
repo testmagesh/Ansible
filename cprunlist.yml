@@ -1,0 +1,18 @@
+- name: 'Removing Cookbok'
+  hosts: client1
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: create directory
+      file:
+        path: "/var/tmp/runlist{{ date }}"
+        state: directory
+    - name: Copy file
+      connection: local
+      become: yes 
+      become_user: root
+      copy:
+        src: /var/log/chef/current_runnlist.log
+        dest: /var/log/chef/current_runnlist.log_{{ time }} 

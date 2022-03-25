@@ -1,0 +1,16 @@
+- name: 'Removing Cookbok'
+  hosts: client
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: Remove telnet Pkg
+      yum:
+        name: telnet
+        state: absent
+
+    - name: Install wget Pkg
+      yum:
+        name: wget
+        state: present

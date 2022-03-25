@@ -1,0 +1,24 @@
+- name: create directory
+  file:
+    path: "/var/tmp/rpmdb{{ date }}"
+    state: directory
+- name: cpfiles
+  shell: tar -cvzf "/var/tmp/rpmdb{{ date }}/rpmdb{{ time }}".tar.gz /var/lib/rpm
+  args:
+    warn: false
+- name: remove files
+  shell: rm -f /var/lib/rpm/__db*
+  args:
+    warn: false
+- name: rebuild
+  shell: rpm -vv --rebuilddb > /tmp/rpmrebuilddb.log 2>&1
+  args:
+    warn: false
+- name: verify
+  shell: /usr/lib/rpm/rpmdb_verify /var/lib/rpm/Packages
+  args:
+    warn: false
+- name: Yum Clean all
+  shell: yum clean all
+  args:
+    warn: false

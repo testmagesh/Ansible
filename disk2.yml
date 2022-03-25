@@ -1,0 +1,14 @@
+- name: 'diskusage'
+  hosts: client,client1
+  become: true
+  ignore_errors: yes
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: check filesystem used size
+      shell: df -m | awk 'NF==1 {fs=$0} NF>1 && $(NF-1)+0 > 10 {print fs $0 }' | awk '{print $6}' > /tmp/fsinfo{{ date }}
+    - name: call FS
+      shell: cat '/tmp/fsinfo{{ date }}'
+      register: fs
+    - debug: var=fs

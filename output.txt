@@ -1,0 +1,10 @@
+avahi-autoipd
+dbus
+polkitd
+tss
+postfix
+sshd
+user1
+systemd-network
+jenkins
+testmagesh

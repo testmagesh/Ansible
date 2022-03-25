@@ -1,0 +1,9 @@
+- name: 'create directory and cp files'
+  hosts: client
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+     - include_tasks: rpmdb3.yml
+       when: ansible_distribution == "Redhat" and ansible_distribution_major_version == "7"

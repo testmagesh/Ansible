@@ -1,0 +1,7 @@
+- name: 'Change file permission'
+  hosts: client1
+  become: true
+  tasks:
+    - name: Sert file permission
+      file: path=/var/tmp/rpmdb.tar.gz mode=0600 state=file
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"

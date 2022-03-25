@@ -1,0 +1,24 @@
+- name: 'Removing Cookbok'
+  hosts: client1
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: create directory
+      file:
+        path: "/var/tmp/runlist{{ date }}"
+        state: directory
+
+    - name: Collect runlist
+      shell: sed 's/,/&\n/g' /var/log/chef/current_runnlist.log > "/var/tmp/runlist{{ date }}/runlist1-remove-{{ extra }}";cat "/var/tmp/runlist{{ date }}/runlist1-remove-{{ extra }}" | grep -v {{ extra }} > "/var/tmp/runlist{{ date }}/runlist2-remove"
+
+    - name: Single Line
+      shell: cat "/var/tmp/runlist{{ date }}/runlist2-remove" | paste -s -d '' > "/var/tmp/runlist{{ date }}/runlist-final"
+ 
+    - name: over writing the current_runnlist log file
+      shell: cat "/var/tmp/runlist{{ date }}/runlist-final" > "/var/log/chef/current_runnlist.log"
+      
+
+    - name: run chef client
+      shell: for i in `cat /var/tmp/runlist{{ date }}/runlist-final`; do chef-client -r  $i; done

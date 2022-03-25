@@ -1,0 +1,16 @@
+- name: 'create directory and cp files'
+  hosts: client1
+  tasks:
+     - name: create directory
+       file:
+         path: /var/tmp/rpmdb4
+         state: directory
+     - name: cpfiles
+       become: true
+       copy:
+         src: '{{ item.src }}'
+         dest: '{{ item.dest }}'
+       with_items:
+         - { src: /var/lib/rpm/__db.001, dest: /var/tmp/rpmdb4/ }
+         - { src: /var/lib/rpm/__db.002, dest: /var/tmp/rpmdb4/ }
+         - { src: /var/lib/rpm/__db.003, dest: /var/tmp/rpmdb4/ }

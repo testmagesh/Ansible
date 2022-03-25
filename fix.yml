@@ -1,0 +1,24 @@
+- name: 'Change file permission'
+  hosts: client1
+  become: true
+  ignore_errors: yes
+  tasks:
+    - name: check file permission
+      shell: ls -ld /var/tmp/rpmdb.tar.gz | awk '{print $1}'
+      register: lsouttarfile
+    - debug: var=lsouttarfile
+    - name: Sert file permission
+      file: path=/var/tmp/rpmdb.tar.gz mode=0600 state=file
+      when: lsouttarfile.stdout_lines == [ "-rw-r--r--." ] and ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+    - name: check file service
+      shell: systemctl status auditd | grep Active | awk '{ print $2 }'
+      register: auditdstatus
+    - debug: var=auditdstatus
+    - name: Kill auditd failed pid
+      shell: for i in `auditctl -s | grep -i pid | awk '{ print $2 }'`; do kill -9 $i; done
+      when: auditdstatus.stdout_lines == [ "active" ] and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+    - name: Start auditd service
+      service:
+        name: auditd
+        state: started
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"

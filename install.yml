@@ -1,0 +1,7 @@
+---
+- hosts: client
+  tasks:
+  - name: Install a httpd pkg
+    yum: name=httpd state=latest
+  - name: Start a httpd service
+    service: name=httpd state=restarted

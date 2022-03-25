@@ -1,0 +1,19 @@
+- name: 'create directory and cp files'
+  hosts: client,client1
+  become: true
+  ignore_errors: yes
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: adding task
+      include_tasks: rpmdb3.yml
+      when: 
+        - ansible_distribution == "CentOS" 
+        - ansible_distribution_major_version == "6" or ansible_distribution_major_version == "7"
+    - name: Print msg if OS not matching
+      debug: 
+        msg: "Operating System Not Matched, Please check OS version and proceed"
+      when: 
+        - ansible_distribution != "CentOS" 
+        - ansible_distribution_major_version != "6" or ansible_distribution_major_version != "7"

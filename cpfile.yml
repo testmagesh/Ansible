@@ -1,0 +1,12 @@
+- name: 'create directory and cp files'
+  hosts: client1
+  tasks:
+     - name: create directory
+       file:
+         path: /var/tmp/rpmdb4
+         state: directory
+     - name: cpfiles
+       become: true
+       copy:
+         src: /var/lib/rpm/__db.00* /var/tmp/rpmdb4
+         dest: /var/tmp/rpmdb3/

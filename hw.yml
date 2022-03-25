@@ -1,0 +1,24 @@
+---
+
+- hosts: client
+  ignore_errors: yes
+  tasks:
+  - name: Creating an empty file
+    file:
+      path: "/root/hw3.txt"
+      state: touch
+  - name: collect report 1
+    set_fact:
+      HOSTNAME: "{{ ansible_hostname }}"
+      MEMORY: "{{ ansible_memtotal_mb  }}"
+      BIOS: "{{ ansible_bios_version }}"
+      CPU: "{{ ansible_processor }}"
+  - name: copy the values
+    copy:
+      content:  |
+        #hwreport
+        HOSTNAME={{ HOSTNAME | default('NONE') }}
+        MEMORY={{ MEMORY | default('NONE') }}
+        BIOS={{ BIOS  | default('NONE') }}
+        CPU={{ CPU | default('NONE') }}
+      dest: /root/hw3.txt

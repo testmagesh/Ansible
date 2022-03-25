@@ -1,0 +1,5 @@
+---
+- hosts: client
+  tasks:
+  - name: Unnstall a httpd pkg
+    yum: name=httpd state=absent
