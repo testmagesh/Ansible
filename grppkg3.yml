@@ -1,0 +1,23 @@
+- name: 'Removing Cookbok'
+  hosts: client
+  become: true
+  vars:
+    date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+    time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: To check wget installed or not
+      shell: rpm -qa | grep -i "{{ extra }}" | awk -F- {'print $1'}
+      args:
+        warn: false
+      register: rpmwgetout
+    - debug: var=rpmwgetout
+    - name: Remove telnet Pkg
+      yum:
+        name: telnet 
+        state: absent
+    - name: Install wget Pkg
+      yum:
+        name: "{{ extra }}"
+        state: present
+      when:
+        - rpmwgetout.rc == 0 or rpmwgetout.stdout.lines != [ "wget" ]

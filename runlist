@@ -1,0 +1,1 @@
+recipe[abc_rhel_base_v1],recipe[abc_rhel_base_v2],recipe[abc_rhel_base_v3],recipe[abc_rhel_base_v4]

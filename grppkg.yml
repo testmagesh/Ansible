@@ -1,16 +1,32 @@
-- name: 'Removing Cookbok'
+- name: 'Removing Grppkg'
   hosts: client
   become: true
+  ignore_errors: true
   vars:
     date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
     time: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
   tasks:
+    - name: To check telnet installed or not
+      shell: rpm -qa | grep -i "telnet" | awk -F- {'print $1'}
+      args:
+        warn: false
+      register: rpmwgetout
+    - debug: var=rpmwgetout
+    - name: To check telnetfullpkg installed or not
+      shell: rpm -qa | grep -i "telnet"
+      args:
+        warn: false
+      register: removetelnet
+    - debug: var=removetelnet
     - name: Remove telnet Pkg
       yum:
-        name: "{{ extra }}"
+        name: "{{ removetelnet.stdout_lines }}"
         state: absent
-
+      register: removetelnetpkg
+    - debug: var=removetelnetpkg
     - name: Install wget Pkg
       yum:
-        name: wget
+        name: "{{ extra }}"
         state: present
+      when:
+        - rpmwgetout.rc == 0 or rpmwgetout.stdout_lines != [ "wget-1.14-18.el7_6.1.x86_64" ]
